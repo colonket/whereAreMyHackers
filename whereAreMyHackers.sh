@@ -5,26 +5,43 @@
 ###			various countries fail to login.
 ###	Author:	Colonket
 
+# Check if geoiplookup is installed
 if ! command -v geoiplookup &> /dev/null
 then
-	echo "The program 'geoiplookup' could not be found"
-	echo "Please install and try again"
+	echo "The binary 'geoiplookup' could not be found"
+	echo "You may be able to install the binary through the geoip-bin package"
 	exit
 fi
 
-# Get IP addresses from lastb and sort
+# Script needs to be run as root to use lastb
+if [ "$EUID" -ne 0 ]
+then
+	echo "Please run as root 'sudo ./whereAreMyHackers.sh'"
+	exit
+fi
+
+# Get IP addresses from lastb
 ips=$(sudo lastb | awk -F" " '{print $3}' | grep -E '[0-9]' | uniq -c)
+
+# Print something if nothing found
+if ((${#ips[@]}))
+then
+	echo "No failed logins found!"
+	exit
+fi
+
 # Create new array with IP's frequency before every IP
+# Frequency Values appear first (even indexes)
+# IP Addresses appear second (odd indexes)
 sorted=$(awk '{key=$0; getline; print key "\n" $0;}' <<< $ips)
 #sorted="1 a 2 b 3 c 4 d 5 e"
 
 declare -A IPfreq	# Associative Array / Dictionary 
 declare -A IPloc	# Associative Array / Dictionary
-count=0
 declare -A countryFreq	# Associative Array / Dictionary
-# Frequency Values appear first (even indexes)
-# IP Addresses appear second (odd indexes)
 
+# Mapping IP addresses to countries and frequencies
+count=0
 for i in $sorted; do
 	if (( $count % 2 == 0 ))
 	then
@@ -32,13 +49,12 @@ for i in $sorted; do
 	else
 		country=$(geoiplookup $i | awk -F": " '{print $NF}')
 		if [[ -z ${countryFreq[$country]} ]]; then
-			# If the country hasn't been encountered before
-			countryFreq[$country]=1	# Start counting how many times it appears
+			# The country has not been counted yet
+			countryFreq[$country]=1	
 		else
-			# Increment the country's frequency value for each new occurance
+			# The country has been counted already
 			((countryFreq[$country]+=1))
 		fi
-		# Record the Location and Frequency of each IP address
 		IPloc[$i]=$country
 		IPfreq[$i]=$IPfreqVal
 		#echo "$i ${IPloc[$i]} ${IPfreq[$i]}"	# IP, Location, Frequency
@@ -46,6 +62,7 @@ for i in $sorted; do
 	count=$((count+1))
 done
 
+# Print Countries by IP address count
 for key in "${!countryFreq[@]}"
 do
 	echo "$key:${countryFreq[$key]}"

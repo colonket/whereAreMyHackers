@@ -2,11 +2,14 @@
 
 ## Requirements
 
-`geoiplookup` is required and used to locate IP addresses
+`geoiplookup` from the `geoip-bin` package is required and used to locate IP addresses
+
+On Ubuntu/Debian-based systems, run:
+`sudo apt install geoip-bin`
 
 ## Usage
 
-`./whereAreMyHackers.sh`
+`sudo ./whereAreMyHackers.sh`
 
 ## About
 
