@@ -20,7 +20,7 @@ then
 	exit
 fi
 
-# Get IP addresses from lastb
+# Store IP addresses from lastb into array 'ips'
 ips=$(sudo lastb | awk -F" " '{print $3}' | grep -E '[0-9]' | uniq -c)
 
 # Print something if nothing found
@@ -30,21 +30,22 @@ then
 	exit
 fi
 
-# Create new array with IP's frequency before every IP
-# Frequency Values appear first (even indexes)
-# IP Addresses appear second (odd indexes)
+# Frequency Values appear first (even indexes, starting at 0)
+# IP Addresses appear second (odd indexes, starting at 1)
 sorted=$(awk '{key=$0; getline; print key "\n" $0;}' <<< $ips)
-#sorted="1 a 2 b 3 c 4 d 5 e"
+#sorted="1 IPA 2 IPB 3 IPC 4 IPD 5 IPE"
 
-declare -A IPfreq	# Associative Array / Dictionary 
-declare -A IPloc	# Associative Array / Dictionary
-declare -A countryFreq	# Associative Array / Dictionary
+# Initiate Dictionaries / Associative Arrays
+declare -A IPfreq		# IP:Frequency
+declare -A IPloc		# IP:Location
+declare -A countryFreq	# Country:Frequency
 
 # Mapping IP addresses to countries and frequencies
 count=0
 for i in $sorted; do
 	if (( $count % 2 == 0 ))
 	then
+		# How many times an IP address appeared
 		IPfreqVal=$i
 	else
 		country=$(geoiplookup $i | awk -F": " '{print $NF}')
