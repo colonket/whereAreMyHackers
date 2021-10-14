@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 
-### Title:	whereAreMyHackers.sh
+###	Title:	whereAreMyHackers.sh
 ###	Desc:	A script to print how many times IP addresses from
 ###			various countries fail to login.
 ###	Author:	Colonket
@@ -22,13 +22,6 @@ fi
 
 # Store IP addresses from lastb into array 'ips'
 ips=$(sudo lastb | awk -F" " '{print $3}' | grep -E '[0-9]' | uniq -c)
-
-# Print something if nothing found
-if ((${#ips[@]}))
-then
-	echo "No failed logins found!"
-	exit
-fi
 
 # Frequency Values appear first (even indexes, starting at 0)
 # IP Addresses appear second (odd indexes, starting at 1)
